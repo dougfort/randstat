@@ -1,12 +1,12 @@
-//! Random Status Selector. 
-//! 
-//! This object implements Iterator to returns a stream of status bytes.
+//! This crate implements an Iterator which returns a stream of randomly  selected status bytes.
+//! The user can specify the probability of receiving a certain status by declaring an integral percentage.
 //! 
 
 use rand::Rng;
 use std::error::Error;
 use std::fmt;
 
+/// The error type for overflowing the percentage definitions (> 100%)
 #[derive(Debug)]
 pub struct RandStatOverflowError {}
 
@@ -18,10 +18,52 @@ impl fmt::Display for RandStatOverflowError {
 
 impl Error for RandStatOverflowError {}
 
+/// The container for random status defintions
+/// 
+/// There are 100 cells, each representing a probability of .01 as an integer percentage.
+/// 
+/// The default, all cells are intitialized to zero. There is a 100% chance (probability 1.0) 
+/// of getting the value 0 in each step of the interator.  
+/// 
+/// # Examples
+/// 
+/// ```
+/// // The default value returns a stream of zeros
+/// let rs: randstat::RandStat = Default::default();
+/// for i in rs.take(1000) {
+///     assert_eq!(i, 0);
+/// }
+/// 
+/// // Simulate a coin toss by setting half the cells
+/// #[derive(Debug, PartialEq)]
+/// #[repr(u8)]
+/// enum Coin {
+///     Tails = 0,
+///     Heads = 1
+/// }
+///
+/// impl From<u8> for Coin {
+///
+///     fn from(i: u8) -> Self {
+///         match  i {
+///            0x00 => Coin::Tails,
+///            0x01 => Coin::Heads,
+///            _ => panic!("unknown Coin {}", i),
+///        }
+///    }
+/// }
+///
+/// let init = vec![randstat::StatInit{percentage:  50, value: Coin::Heads as u8}];
+/// let rs: randstat::RandStat = randstat::RandStat::new(&init).unwrap();
+/// for c in rs.take(100).map(Coin::from) {
+///    assert!(c == Coin::Heads || c == Coin::Tails);
+/// }
+/// ```
 pub struct RandStat {
     cells: [u8; 100],
 }
 
+/// A single random status definition. Used for initialization.
 pub struct StatInit {
     pub percentage: usize,
     pub value:  u8,
