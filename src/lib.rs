@@ -1,6 +1,8 @@
 //! This crate implements an Iterator which returns a stream of randomly  selected status bytes.
 //! The user can specify the probability of receiving a certain status by declaring an integral percentage.
 //! 
+//! The original use case is in a simulation of an unreliable network. Percentages of lost messages, garbled messages,
+//! dropped connections, etc. 
 
 use rand::Rng;
 use std::error::Error;
