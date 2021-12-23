@@ -1,8 +1,8 @@
 //! This crate implements an Iterator which returns a stream of randomly  selected status bytes.
 //! The user can specify the probability of receiving a certain status by declaring an integral percentage.
-//! 
+//!
 //! The original use case is in a simulation of an unreliable network. Percentages of lost messages, garbled messages,
-//! dropped connections, etc. 
+//! dropped connections, etc.
 
 use rand::Rng;
 use std::error::Error;
@@ -21,21 +21,21 @@ impl fmt::Display for RandStatOverflowError {
 impl Error for RandStatOverflowError {}
 
 /// The container for random status defintions
-/// 
+///
 /// There are 100 cells, each representing a probability of .01 as an integer percentage.
-/// 
-/// The default, all cells are intitialized to zero. There is a 100% chance (probability 1.0) 
+///
+/// The default, all cells are intitialized to zero. There is a 100% chance (probability 1.0)
 /// of getting the value 0 in each step of the interator.  
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// // The default value returns a stream of zeros
 /// let rs: randstat::RandStat = Default::default();
 /// for i in rs.take(1000) {
 ///     assert_eq!(i, 0);
 /// }
-/// 
+///
 /// // Simulate a coin toss by setting half the cells
 /// #[derive(Debug, PartialEq)]
 /// #[repr(u8)]
@@ -68,38 +68,34 @@ pub struct RandStat {
 /// A single random status definition. Used for initialization.
 pub struct StatInit {
     pub percentage: usize,
-    pub value:  u8,
+    pub value: u8,
 }
 
 impl RandStat {
-
     pub fn new(init_vec: &[StatInit]) -> Result<Self, RandStatOverflowError> {
         let mut cells = [0; 100];
         let mut index: usize = 0;
         for init in init_vec {
             for _ in 0..init.percentage {
                 if index >= cells.len() {
-                    return Err(RandStatOverflowError{});
+                    return Err(RandStatOverflowError {});
                 }
                 cells[index] = init.value;
                 index += 1;
             }
         }
-        Ok(RandStat{ cells })
+        Ok(RandStat { cells })
     }
 }
 
 impl Default for RandStat {
     fn default() -> Self {
-        RandStat{
-            cells: [0; 100],
-        }
+        RandStat { cells: [0; 100] }
     }
 }
 
 /// Returns a stream of status bytes
 impl Iterator for RandStat {
-
     type Item = u8;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -107,7 +103,6 @@ impl Iterator for RandStat {
         let index: usize = rng.gen::<usize>() % self.cells.len();
         Some(self.cells[index])
     }
-
 }
 
 #[cfg(test)]
@@ -119,23 +114,32 @@ mod tests {
         let rs: RandStat = Default::default();
         for i in rs.take(1000) {
             assert_eq!(i, 0);
-        } 
+        }
     }
 
     #[test]
     fn can_create_single_value() {
-        let init = vec![StatInit{percentage:  100, value: 0xff}];
+        let init = vec![StatInit {
+            percentage: 100,
+            value: 0xff,
+        }];
         let rs: RandStat = RandStat::new(&init).unwrap();
         for i in rs.take(1000) {
             assert_eq!(i, 0xff);
-        } 
+        }
     }
 
     #[test]
     fn can_catch_overflow() {
         let init = vec![
-            StatInit{percentage:  100, value: 0x01},
-            StatInit{percentage:  1, value: 0x02},
+            StatInit {
+                percentage: 100,
+                value: 0x01,
+            },
+            StatInit {
+                percentage: 1,
+                value: 0x02,
+            },
         ];
         let rs = RandStat::new(&init);
         assert!(rs.is_err());
@@ -144,14 +148,23 @@ mod tests {
     #[test]
     fn can_create_multi_value() {
         let init = vec![
-            StatInit{percentage:  10, value: 0x01},
-            StatInit{percentage:  10, value: 0x02},
-            StatInit{percentage:  10, value: 0x03},
+            StatInit {
+                percentage: 10,
+                value: 0x01,
+            },
+            StatInit {
+                percentage: 10,
+                value: 0x02,
+            },
+            StatInit {
+                percentage: 10,
+                value: 0x03,
+            },
         ];
         let rs: RandStat = RandStat::new(&init).unwrap();
         let test_vec: Vec<u8> = vec![0x00, 0x01, 0x02, 0x03];
         for i in rs.take(1000) {
             assert!(test_vec.contains(&i));
-        } 
+        }
     }
 }

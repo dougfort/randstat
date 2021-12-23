@@ -2,6 +2,11 @@
 name = "randstat"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "an Iterator which returns a stream of randomly  selected status bytes"
+homepage = "https://github.com/dougfort/randstat#randstat"
+repository = "https://github.com/dougfort/randstat/"
+readme = "https://github.com/dougfort/randstat#readme"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
